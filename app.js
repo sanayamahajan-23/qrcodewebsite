@@ -1,7 +1,7 @@
-const express = require('express');
-const path = require('path');
-const qrcode = require('qrcode');
-const bodyParser = require('body-parser');
+import express from "express";
+import path from "path";
+import qrcode from "qrcode";
+import bodyParser from "body-parser";
 
 const app = express();
 
