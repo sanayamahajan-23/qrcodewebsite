@@ -1,39 +1,38 @@
+// app.js
+
 const express = require('express');
-const path = require('path');
-const qrcode = require('qrcode');
-const bodyParser = require('body-parser');
-
 const app = express();
+const qr = require('qrcode');
+const path = require('path');
 
-// Middleware to parse URL-encoded data
-app.use(bodyParser.urlencoded({ extended: false }));
-
-// Middleware to serve static files from the 'public' directory
-// Adjust the path to point to the correct 'public' directory
-app.use(express.static(path.join(__dirname, 'qrcode_website', 'public')));
-
-// Set EJS as templating engine
 app.set('view engine', 'ejs');
-// Adjust the path to point to the correct views directory
-app.set('views', path.join(__dirname, 'views'));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Routes
+// Route to render index.ejs
 app.get('/', (req, res) => {
     res.render('index', { qrCodeUrl: null });
 });
 
-app.post('/generate', (req, res) => {
-    const url = req.body.url;
-
-    qrcode.toDataURL(url, (err, src) => {
-        if (err) res.send('Error occurred');
-
-        res.render('index', { qrCodeUrl: src });
-    });
+// Route to handle form submission and generate QR code
+app.post('/generate', async (req, res) => {
+    try {
+        const url = req.body.url;
+        const qrCodeUrl = await generateQRCode(url);
+        res.render('index', { qrCodeUrl });
+    } catch (err) {
+        res.status(500).send('Error generating QR code');
+    }
 });
 
-// Start the server
-const PORT = process.env.PORT || 3030;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+// Function to generate QR code
+async function generateQRCode(url) {
+    try {
+        return await qr.toDataURL(url);
+    } catch (err) {
+        throw err;
+    }
+}
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
