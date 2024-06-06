@@ -2,10 +2,13 @@ const express = require('express');
 const path = require('path');
 const qrcode = require('qrcode');
 const bodyParser = require('body-parser');
+
 const app = express();
 
-// Middleware
+// Middleware to parse URL-encoded data
 app.use(bodyParser.urlencoded({ extended: false }));
+
+// Middleware to serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Set EJS as templating engine
