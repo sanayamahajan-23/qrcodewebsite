@@ -5,9 +5,12 @@ const app = express();
 const qr = require('qrcode');
 const path = require('path');
 
+app.set('views', path.join(__dirname, '../views'));
 app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
+
+// Serve static files from the parent directory (since app.js is now in public)
+app.use(express.static(path.join(__dirname, '../public')));
 
 // Route to render index.ejs
 app.get('/', (req, res) => {
