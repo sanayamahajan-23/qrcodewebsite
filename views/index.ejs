@@ -10,10 +10,20 @@
     <div class="outer">
      <div class="top">
       <h5 style="font-family: Arial, Helvetica, sans-serif;">QR Generator</h4>
+        <form action="/generate" method="POST">
+            <input type="text" name="url" placeholder="Enter URL" required>
+            <button type="submit">Generate</button>
+        </form>
      </div>
-     <div class="again">
-      <h3>Scan this from your scanner</h1>
-     </div>
+     
+        <% if (condition) { %>
+            <div class="again">
+                <h3>Scan this from your scanner</h1>
+                    <img src="<%= qrCodeUrl %>" alt="QR Code">  <!--image from qr code-->
+            </div>
+        <% } %>
+         
+      
     </div>
 </body>
 </html>
