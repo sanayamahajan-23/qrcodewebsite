@@ -11,7 +11,7 @@
 <body>
     <div class="outer">
         <div class="top">
-            <h5>QR Generator</h5>
+            <h4>QR Generator</h4>
             <form action="/generate" method="POST">
                 <input type="text" name="url" placeholder="Enter URL" required>
                 <button type="submit">Generate</button>
@@ -19,7 +19,7 @@
         </div>
         <% if (qrCodeUrl) { %>
             <div class="again">
-                <h3>Scan this from your scanner</h3>
+                <h2>Scan this from your scanner</h2>
                 <img src="<%= qrCodeUrl %>" alt="QR Code">
             </div>
         <% } %>
