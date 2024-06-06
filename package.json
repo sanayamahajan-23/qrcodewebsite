@@ -1,0 +1,17 @@
+{
+  "name": "qrcodewebsite",
+  "version": "1.0.0",
+  "description": "This is qr code generator website code  <br> <br> author : Sanaya Mahajan , Yamini Uppal <br> <br> This website lets you enter your url and generate qr code corresponding to it.  <br> You can also download it as png  <br> <hr> <br> Languages used -  Frontend - HTML,CSS <br> Backend - NodeJS, EJS",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "qrcode": "^1.5.3"
+  }
+}
