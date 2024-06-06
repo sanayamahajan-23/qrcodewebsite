@@ -9,10 +9,12 @@ const app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
 
 // Middleware to serve static files from the 'public' directory
-app.use(express.static(path.join(__dirname, 'public')));
+// Adjust the path to point to the correct 'public' directory
+app.use(express.static(path.join(__dirname, 'qrcode_website', 'public')));
 
 // Set EJS as templating engine
 app.set('view engine', 'ejs');
+// Adjust the path to point to the correct views directory
 app.set('views', path.join(__dirname, 'views'));
 
 // Routes
@@ -31,7 +33,7 @@ app.post('/generate', (req, res) => {
 });
 
 // Start the server
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3030;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
