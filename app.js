@@ -9,10 +9,10 @@ const mailjet = require('node-mailjet').connect(process.env.MJ_APIKEY_PUBLIC, pr
 app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
-const mg = mailgun({
-    apiKey: '',
-    domain: 'YOUR_MAILGUN_DOMAIN'
-  });
+// const mg = mailgun({
+//     apiKey: '',
+//     domain: 'YOUR_MAILGUN_DOMAIN'
+//   });
 // Route to render index.ejs
 app.get('/', (req, res) => {
     res.render('index', { qrCodeUrl: null });
@@ -52,6 +52,39 @@ async function generateQRCode(url) {
 }
 async function sendEmailWithQR(email, qrCodeUrl) {
    //make changes here 
+
+   const request = mailjet
+        .post("send", { 'version': 'v3.1' })
+        .request({
+            "Messages": [
+                {
+                    "From": {
+                        "Email": "monagupta9086287092@gmail.com",
+                        "Name": "sanaya"
+                    },
+                    "To": [
+                        {
+                            "Email": email,
+                            "Name": "User"
+                        }
+                    ],
+                    "Subject": "Your QR Code",
+                    "TextPart": "Here is your QR code",
+                    "HTMLPart": `<h3>Dear user, here is your QR code:</h3><br /><img src="${qrCodeUrl}" alt="QR Code"/>`,
+                    "CustomID": "QRCodeEmail"
+                }
+            ]
+        });
+
+    return request
+        .then((result) => {
+            console.log(result.body);
+        })
+        .catch((err) => {
+            console.log(err.statusCode);
+            throw err;
+        });
 }
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
