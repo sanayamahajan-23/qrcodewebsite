@@ -4,10 +4,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code Generator</title>
-    <link rel="stylesheet" href="/styles.css">
-</head>
+    <meta name="view<!-- views/index.ejs -->
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>QR Code Generator</title>
+        <link rel="stylesheet" href="/styles.css">
+    </head>
 <body>
     <div class="outer">
         <div class="top">
@@ -24,8 +30,9 @@
                 <a href="<%= qrCodeUrl %>" download="qrcode.png">Download</a>
                 <form action="/send" method="post" class="emailform">
                         <label for="">Email:</label>
-                        <input type="email" placeholder="xyz@gmail.com">
-                        <input type="submit" placeholder="Send">
+                        <input type="email" name="email" placeholder="xyz@gmail.com">
+                        <input type="hidden" name="qrCodeUrl" value="<%= qrCodeUrl %>">
+                        <button type="submit">Send</button>
                 </form>
             <% } %>
             </div>
