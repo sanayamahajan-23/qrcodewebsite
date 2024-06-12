@@ -4,15 +4,16 @@ const express = require('express');
 const app = express();
 const qr = require('qrcode');
 const path = require('path');
-const mailjet = require('node-mailjet').connect(process.env.MJ_APIKEY_PUBLIC, process.env.MJ_APIKEY_PRIVATE);
+const Mailjet = require('node-mailjet');
 
+const mailjet = Mailjet.apiConnect(
+  process.env.MJ_APIKEY_PUBLIC,
+  process.env.MJ_APIKEY_PRIVATE
+);
 app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
-// const mg = mailgun({
-//     apiKey: '',
-//     domain: 'YOUR_MAILGUN_DOMAIN'
-//   });
+
 // Route to render index.ejs
 app.get('/', (req, res) => {
     res.render('index', { qrCodeUrl: null });
@@ -32,7 +33,8 @@ app.post('/send', async (req, res) => {  //calls sendEmailWithQR
     try {
         const email = req.body.email;
         const qrCodeUrl = req.body.qrCodeUrl;
-
+        console.log('Sending email to:', email);
+        console.log('QR code URL:', qrCodeUrl);
         await sendEmailWithQR(email, qrCodeUrl);
 
         res.send('QR Code sent to your email!');
@@ -45,7 +47,8 @@ app.post('/send', async (req, res) => {  //calls sendEmailWithQR
 // Function to generate QR code
 async function generateQRCode(url) {
     try {
-        return await qr.toDataURL(url);
+        const qrCodeUrl = await qr.toDataURL(url);
+        return qrCodeUrl;
     } catch (err) {
         throw err;
     }
@@ -57,7 +60,9 @@ async function sendEmailWithQR(email, qrCodeUrl) {
         .post("send", { 'version': 'v3.1' })
         .request({
             "Messages": [
-                {
+                {   "Headers": {
+                    "Content-Type": "text/html"
+                },
                     "From": {
                         "Email": "monagupta9086287092@gmail.com",
                         "Name": "sanaya"
@@ -70,7 +75,10 @@ async function sendEmailWithQR(email, qrCodeUrl) {
                     ],
                     "Subject": "Your QR Code",
                     "TextPart": "Here is your QR code",
-                    "HTMLPart": `<h3>Dear user, here is your QR code:</h3><br /><img src="${qrCodeUrl}" alt="QR Code"/>`,
+                    "HTMLPart": `
+                        <h3>Dear user, here is your QR code:</h3>
+                        <br />
+                        <img src="${qrCodeUrl}" alt="QR Code" style="max-width: 200px; height: auto;" />`,
                     "CustomID": "QRCodeEmail"
                 }
             ]
@@ -84,7 +92,6 @@ async function sendEmailWithQR(email, qrCodeUrl) {
             console.log(err.statusCode);
             throw err;
         });
-}
-
+};
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
