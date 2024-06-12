@@ -12,7 +12,7 @@
     <div class="outer">
         <div class="top">
             <h4>QR Generator</h4>
-            <form action="/generate" method="POST">
+            <form action="/generate" method="POST" class="generateform">
                 <input type="text" name="url" placeholder="Enter URL" required>
                 <button type="submit">Generate</button>
             </form>
@@ -22,6 +22,11 @@
                 <h2>Scan this from your scanner</h2>
                 <img src="<%= qrCodeUrl %>" alt="QR Code">
                 <a href="<%= qrCodeUrl %>" download="qrcode.png">Download</a>
+                <form action="/send" method="post" class="emailform">
+                        <label for="">Email:</label>
+                        <input type="email" placeholder="xyz@gmail.com">
+                        <input type="submit" placeholder="Send">
+                </form>
             <% } %>
             </div>
         
