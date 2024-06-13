@@ -4,12 +4,9 @@ const express = require('express');
 const app = express();
 const qr = require('qrcode');
 const path = require('path');
-const Mailjet = require('node-mailjet');
+const nodemailer = require('nodemailer');
+const fs = require('fs');
 
-const mailjet = Mailjet.apiConnect(
-  process.env.MJ_APIKEY_PUBLIC,
-  process.env.MJ_APIKEY_PRIVATE
-);
 app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -19,7 +16,6 @@ app.get('/', (req, res) => {
     res.render('index', { qrCodeUrl: null });
 });
 
-// Route to handle form submission and generate QR code
 app.post('/generate', async (req, res) => {
     try {
         const url = req.body.url;
@@ -29,13 +25,21 @@ app.post('/generate', async (req, res) => {
         res.status(500).send('Error generating QR code');
     }
 });
-app.post('/send', async (req, res) => {  //calls sendEmailWithQR
+app.post('/send', async (req, res) => {
     try {
         const email = req.body.email;
         const qrCodeUrl = req.body.qrCodeUrl;
-        console.log('Sending email to:', email);
-        console.log('QR code URL:', qrCodeUrl);
-        await sendEmailWithQR(email, qrCodeUrl);
+
+        // Save the QR code to a file
+        const base64Data = qrCodeUrl.replace(/^data:image\/png;base64,/, '');
+        const qrCodePath = path.join(__dirname, 'qrcode.png');
+        fs.writeFileSync(qrCodePath, base64Data, 'base64');
+
+        // Send the email with the QR code attached
+        await sendEmailWithQR(email, qrCodePath);
+
+        // Clean up the QR code file
+        fs.unlinkSync(qrCodePath);
 
         res.send('QR Code sent to your email!');
     } catch (err) {
@@ -43,7 +47,6 @@ app.post('/send', async (req, res) => {  //calls sendEmailWithQR
         res.status(500).send('Error sending email');
     }
 });
-
 // Function to generate QR code
 async function generateQRCode(url) {
     try {
@@ -53,45 +56,30 @@ async function generateQRCode(url) {
         throw err;
     }
 }
-async function sendEmailWithQR(email, qrCodeUrl) {
-   //make changes here 
+async function sendEmailWithQR(toEmail, qrCodePath) {
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS
+        }
+    });
 
-   const request = mailjet
-        .post("send", { 'version': 'v3.1' })
-        .request({
-            "Messages": [
-                {   "Headers": {
-                    "Content-Type": "text/html"
-                },
-                    "From": {
-                        "Email": "monagupta9086287092@gmail.com",
-                        "Name": "sanaya"
-                    },
-                    "To": [
-                        {
-                            "Email": email,
-                            "Name": "User"
-                        }
-                    ],
-                    "Subject": "Your QR Code",
-                    "TextPart": "Here is your QR code",
-                    "HTMLPart": `
-                        <h3>Dear user, here is your QR code:</h3>
-                        <br />
-                        <img src="${qrCodeUrl}" alt="QR Code" style="max-width: 200px; height: auto;" />`,
-                    "CustomID": "QRCodeEmail"
-                }
-            ]
-        });
+    const mailOptions = {
+        from:process.env.EMAIL_USER,
+        to: toEmail,
+        subject: 'Your QR Code',
+        text: 'Please find the attached QR Code.',
+        attachments: [
+            {
+                filename: 'qrcode.png',
+                path: qrCodePath
+            }
+        ]
+    };
 
-    return request
-        .then((result) => {
-            console.log(result.body);
-        })
-        .catch((err) => {
-            console.log(err.statusCode);
-            throw err;
-        });
-};
+    await transporter.sendMail(mailOptions);
+}
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
