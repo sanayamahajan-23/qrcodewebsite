@@ -20,6 +20,7 @@
         <% if (qrCodeUrl) { %>
             <div class="again">
                 <h2>Scan this from your scanner</h2>
+                <h5>You can scan and Download it easily</h5>
                 <img src="<%= qrCodeUrl %>" alt="QR Code">
                 <a href="<%= qrCodeUrl %>" download="qrcode.png">Download</a>
                 <form action="/send" method="post" class="emailform">
