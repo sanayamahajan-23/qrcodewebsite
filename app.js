@@ -4,20 +4,13 @@ const express = require("express");
 const app = express();
 const qr = require("qrcode");
 const path = require("path");
-const nodemailer = require("nodemailer");
+const Mailjet = require("node-mailjet");
+
 app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false, // false for TLS, true for SSL
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASS,
-  },
-});
 // Route to render index.ejs
 app.get("/", (req, res) => {
   res.render("index", { qrCodeUrl: null });
@@ -33,15 +26,13 @@ app.post("/generate", async (req, res) => {
     res.status(500).send("Error generating QR code");
   }
 });
+
 app.post("/send", async (req, res) => {
-  //calls sendEmailWithQR
   try {
     const email = req.body.email;
     const qrCodeUrl = req.body.qrCodeUrl;
     console.log("Sending email to:", email);
-    console.log("QR code URL:", qrCodeUrl);
     await sendEmailWithQR(email, qrCodeUrl);
-
     res.send("QR Code sent to your email!");
   } catch (err) {
     console.error(err);
@@ -58,9 +49,9 @@ async function generateQRCode(url) {
     throw err;
   }
 }
+
 async function fetchImage(url) {
   try {
-    // Assuming url is a base64 encoded image URL, you might need to modify this based on your QR code generation logic
     const data = url.split(",")[1];
     return Buffer.from(data, "base64");
   } catch (err) {
@@ -69,32 +60,38 @@ async function fetchImage(url) {
 }
 
 async function sendEmailWithQR(email, qrCodeUrl) {
-  try {
-    const qrImage = await fetchImage(qrCodeUrl);
-    const info = await transporter.sendMail({
-      from: process.env.GMAIL_USER,
-      to: email,
-      subject: "Your QR Code and Image",
-      html: `
-                <h3>Dear user, here is your QR code:</h3>
-                <br />
-                <img src="cid:qrCodeUrl" alt="QR Code">
-            `,
-      attachments: [
-        {
-          filename: "qrcode.png",
-          content: qrImage,
-          encoding: "base64",
-          cid: qrCodeUrl, // should match cid value in html img src
+  const mailjet = Mailjet.apiConnect(
+    process.env.MJ_APIKEY_PUBLIC,
+    process.env.MJ_APIKEY_PRIVATE
+  );
+
+  const qrImage = await fetchImage(qrCodeUrl);
+
+  const request = mailjet.post("send", { version: "v3.1" }).request({
+    Messages: [
+      {
+        From: {
+          Email: process.env.SENDER_EMAIL,
+          Name: "QR Code Generator",
         },
-      ],
-    });
-    console.log("Email sent: %s", info.messageId);
-  } catch (err) {
-    console.error(err);
-    throw err;
-  }
+        To: [{ Email: email }],
+        Subject: "Your QR Code",
+        HTMLPart:
+          '<h3>Dear user, here is your QR code:</h3><br /><img src="cid:qrcode.png" alt="QR Code">',
+        Attachments: [
+          {
+            ContentType: "image/png",
+            Filename: "qrcode.png",
+            Base64Content: qrImage.toString("base64"),
+            ContentID: "qrcode.png",
+          },
+        ],
+      },
+    ],
+  });
+
+  const response = await request;
+  console.log("Email sent:", response.body);
 }
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+module.exports = app;
